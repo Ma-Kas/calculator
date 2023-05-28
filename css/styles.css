@@ -36,8 +36,8 @@ body {
 }
 
 .calculator {
-  width: 266px;
-  height: 600px;
+  width: 20rem;
+  height: 42rem;
   border-radius: 20px;
   box-shadow: 
     -10px -10px 20px rgba(255, 255, 255, 1),
@@ -49,25 +49,25 @@ body {
 
 .display {
   text-align: right;
-  padding: 2rem 2rem 1rem 2rem;
+  padding: 2rem 2.5rem 0rem 2.5rem;
 }
 
 .display #display-main {
-  /* maximum string length: 10char */
-  font-size: 2.5rem;
+  /* maximum string length: 12char */
+  font-size: 2.2rem;
   font-weight: 400;
   margin-top: 0.5rem;
 }
 
 .display #display-sub {
-  /* maximum string length: 25char */
+  /* maximum string length: 26char */
 }
 
 .keys {
-  padding: 2rem 2rem;
+  padding: 2.5rem 2.5rem;
   display: flex;
   flex-wrap: wrap;
-  justify-content: right;
+  justify-content: center;
   gap: 1rem;
 }
 
@@ -103,4 +103,9 @@ button.func {
 button#equal {
   font-size: 1.4rem;
   width: 7rem;
+}
+
+/* necessary to avoid the sup element of the x² capturing mouseclick */
+sup {
+  pointer-events: none;
 }
