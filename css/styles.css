@@ -48,12 +48,15 @@ body {
 }
 
 .display {
-  text-align: right;
   padding: 2rem 2.5rem 0rem 2.5rem;
 }
 
 .display #display-main {
   /* maximum string length: 12char */
+  display: flex;
+  justify-content: flex-end;
+  white-space: nowrap;
+  overflow: hidden;
   font-size: 2.2rem;
   font-weight: 400;
   margin-top: 0.5rem;
@@ -61,6 +64,10 @@ body {
 
 .display #display-sub {
   /* maximum string length: 26char */
+  display: flex;
+  justify-content: flex-end;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .keys {

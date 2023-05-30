@@ -1,9 +1,10 @@
 // Global Variables
-let contentSubArr = [];
-let contentMainArr = [];
+let contentSubDisplay = [];
+let contentMainDisplay = [];
 
 let savedValue = '';
 
+let workingOperand = 1; // is currently inputting operand 1 or 2
 let currentValue1 = '';
 let currentValue2 = '';
 let currentOperator = '';
@@ -29,13 +30,14 @@ for (let btn of btns) {
 
       case 'operators':
         if (e.target.id === 'equal') {
-          console.log(calculate(currentValue1, currentValue2, currentOperator));
+          calculate(currentOperator);
         } else if (e.target.id === 'plusminus') {
           handlePlusMinus();
         } else if (e.target.id === 'dot') {
           handleDecimal();
         } else {
-          operatorInput(e.target.id);
+          console.log(e.target.textContent)
+          operatorInput(e.target.id, e.target.textContent);
         }
         break;
 
@@ -43,28 +45,43 @@ for (let btn of btns) {
         funcInput(e.target.id);
         break;
     }
+
+    updateDisplay();
   });
 }
 
 
 function numberInput(num) {
   if (currentOperator === '') {
+    workingOperand = 1;
     currentValue1 += num;
-    console.log(currentValue1);
   } else {
+    workingOperand = 2;
     currentValue2 += num;
-    console.log(currentValue2);
   }
-  // display the new value in display main
+  contentMainDisplay.push(num);
 }
 
 
-function operatorInput(operator) {
+function operatorInput(operator, operatorName) {
   if (currentOperator === '') {
     currentOperator = operator;
+
+    if (operatorName === 'x2') {
+      contentMainDisplay.push('²');
+    } else {
+      contentMainDisplay.push(operatorName);
+    }
+    
   } else {
-    calculate(currentValue1, currentValue2, currentOperator);
+    calculate(currentOperator);
     currentOperator = operator;
+
+    if (operatorName === 'x2') {
+      contentMainDisplay.push('²');
+    } else {
+      contentMainDisplay.push(operatorName);
+    }
   }
 }
 
@@ -78,71 +95,151 @@ function funcInput(func) {
       handleSaveLoad('save');
       break;
     case 'del':
-      // delete last digit
+      handleDelete();
       break;
     case 'ac':
-      // clear display, clear all variables
+      handleAC();
       break;
   }
 }
 
 
 function handlePlusMinus() {
-  // if current value is positive, make negative (prepend -), else
-  // if current value is negative, make positive
-  if (currentValue1.includes('-')) {
-    currentValue1 = currentValue1.replace('-', '');
-  } else {
-    currentValue1 = '-' + currentValue1;
+  if (!(currentOperator === '')) return;
+
+  switch (workingOperand) {
+    case 1:
+      if (currentValue1.includes('-')) {
+        currentValue1 = currentValue1.replace('-', '');
+      } else {
+        currentValue1 = '-' + currentValue1;
+      }
+      break;
+    
+    case 2:
+      if (currentValue2.includes('-')) {
+        currentValue2 = currentValue2.replace('-', '');
+      } else {
+        currentValue2 = '-' + currentValue2;
+      }
+      break;
   }
+
+  // toggle '-' prefix in display variable
+  if (contentMainDisplay[0] === '-') {
+    contentMainDisplay.shift();
+  } else {
+    contentMainDisplay.unshift('-');
+  }
+
 }
 
 
 function handleDecimal() {
-  // if current input already has a decimal point, ignore input
-  // else insert decimal point
-  if (currentValue1.includes('.')) {
-    return;
-  } else {
-    currentValue1 = currentValue1 + '.';
+  switch (workingOperand) {
+    case 1:
+      if (currentValue1.includes('.')) {
+        return;
+      } else {
+        currentValue1 = currentValue1 + '.';
+        break;
+      }
+     
+    case 2:
+      if (currentValue2.includes('.')) {
+        return;
+      } else {
+        currentValue2 = currentValue2 + '.';
+        break;
+      }
   }
-}
 
-
-function updateDisplay() {
-  // display current values
-  displayMain.textContent = currentValue1;
+  contentMainDisplay.push('.');
 }
 
 
 function handleSaveLoad(type) {
   if (type === 'save') {
-    // Store current display in savedValue
+    savedValue = currentValue1;
   } else {
-    // If there is no stored savedValue, return
-    // If there is a stored savedValue, put it into current display
+    if (savedValue === '') {
+      return;
+    } else {
+      contentMainDisplay = Array.from(savedValue);
+      updateDisplay();
+    }
   }
 }
 
 
-function calculate(value1, value2, operator) {
+function handleDelete() {
+  // Delete last digit
+  // depending on workingOperand, delete value1 or 2
+  // delete contentDisplayMain
+  switch (workingOperand) {
+    case 1:
+        currentValue1 = currentValue1.slice(0, -1); // return new string from index 0 up to second last one
+        break;
+     
+    case 2:
+      currentValue2 = currentValue2.slice(0, -1);
+      break;
+  }
+
+  contentMainDisplay.pop();
+}
+
+
+function handleAC() {
+  // Clear all variables EXCEPT saved value
+}
+
+
+function calculate(operator) {
+  let result = '';
+
   switch (operator) {
     case 'plus':
-      return (parseFloat(value1) + parseFloat(value2));
+      result = (parseFloat(currentValue1) + parseFloat(currentValue2));
+      break;
     
     case 'minus':
-      return (parseFloat(value1) - parseFloat(value2));
+      result = (parseFloat(currentValue1) - parseFloat(currentValue2));
+      break;
 
     case 'times':
-      return (parseFloat(value1) * parseFloat(value2));
-    
+      result = (parseFloat(currentValue1) * parseFloat(currentValue2));
+      break;
+
     case 'divide':
-      return (parseFloat(value1) / parseFloat(value2));
-    
+      result = (parseFloat(currentValue1) / parseFloat(currentValue2));
+      break;
+
     case 'squared':
-      return (parseFloat(value1) ** 2);
-    
+      result = (parseFloat(currentValue1) ** 2);
+      break;
+
     case 'percent':
-      return (parseFloat(value1) / 100);
+      result = (parseFloat(currentValue1) / 100);
+      break;
   }
+
+  result = String(Math.round(result * 10) / 10);
+
+  currentValue1 = result;
+  currentValue2 = '';
+  currentOperator = '';
+  workingOperand = 1;
+
+  contentSubDisplay = [...contentMainDisplay];
+  contentSubDisplay.push('=');
+  contentMainDisplay = Array.from(result);
+
+}
+
+
+function updateDisplay() {
+  // display current values
+  displayMain.textContent = contentMainDisplay.join('');
+  displaySub.textContent = contentSubDisplay.join('');
 }
