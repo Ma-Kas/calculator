@@ -24,6 +24,8 @@ const keysOperators = document.querySelectorAll('.operators');
 // Add EventListener to all buttons
 for (let btn of btns) {
   btn.addEventListener('click', (e) => {
+    if (currentValue1 === 'error') handleAC(); // safety to clear everything after error
+
     switch (e.target.className) {
       case 'numbers':
         numberInput(e.target.id);
@@ -52,6 +54,7 @@ for (let btn of btns) {
 
 
 function numberInput(num) {
+  // switch whether user is currently inputting operand1 or 2, based on presence or absence of operator
   if (currentOperator === '') {
     workingOperand = 1;
     // prevent input of more than 1 decimal place
@@ -155,17 +158,15 @@ function handlePlusMinus() {
 function handleDecimal() {
   switch (workingOperand) {
     case 1:
-      if (currentValue1.includes('.')) {
-        return;
-      } else {
+      if (currentValue1.includes('.')) return; // prevent second decimal point
+      else {
         currentValue1 = currentValue1 + '.';
         break;
       }
      
     case 2:
-      if (currentValue2.includes('.')) {
-        return;
-      } else {
+      if (currentValue2.includes('.')) return; // prevent second decimal point
+      else {
         currentValue2 = currentValue2 + '.';
         break;
       }
@@ -177,11 +178,13 @@ function handleDecimal() {
 
 function handleSaveLoad(type) {
   if (type === 'save') {
+    // save case
     savedValue = currentValue1;
+  
   } else {
-    if (savedValue === '') {
-      return;
-    } else {
+    // load case
+    if (savedValue === '') return; // return if nothing to load
+    else {
 
       switch (workingOperand) {
         case 1:
@@ -190,6 +193,7 @@ function handleSaveLoad(type) {
          
         case 2:
           currentValue2 = savedValue;
+          break;
       }
 
       contentMainDisplay.push(savedValue);
@@ -201,8 +205,6 @@ function handleSaveLoad(type) {
 
 function handleDelete() {
   // Delete last digit
-  // depending on workingOperand, delete value1 or 2
-  // delete contentDisplayMain
   switch (workingOperand) {
     case 1:
         currentValue1 = currentValue1.slice(0, -1); // return new string from index 0 up to second last one
