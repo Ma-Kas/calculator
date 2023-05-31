@@ -1,4 +1,5 @@
 // Global Variables
+const maxDisplayLength = 11;
 let contentSubDisplay = [];
 let contentMainDisplay = [];
 
@@ -36,7 +37,6 @@ for (let btn of btns) {
         } else if (e.target.id === 'dot') {
           handleDecimal();
         } else {
-          console.log(e.target.textContent)
           operatorInput(e.target.id, e.target.textContent);
         }
         break;
@@ -54,35 +54,47 @@ for (let btn of btns) {
 function numberInput(num) {
   if (currentOperator === '') {
     workingOperand = 1;
+    // prevent input of more than 1 decimal place
+    if (currentValue1.includes('.')) {
+      if (currentValue1.length > (currentValue1.indexOf('.') + 1)) return;
+    }
     currentValue1 += num;
+
   } else {
     workingOperand = 2;
+    // prevent input of more than 1 decimal place
+    if (currentValue2.includes('.')) {
+      if (currentValue2.length > (currentValue2.indexOf('.') + 1)) return;
+    }
     currentValue2 += num;
   }
+
   contentMainDisplay.push(num);
 }
 
 
 function operatorInput(operator, operatorName) {
-  if (currentOperator === '') {
-    currentOperator = operator;
-
-    if (operatorName === 'x2') {
-      contentMainDisplay.push('²');
+  if (currentValue1 === '') return; // case: prevent input of operator before operand 1
+  
+  // already has operator => double tap or calculation chain initiated 
+  if (!(currentOperator === '')) {
+    if (currentValue2 === '') { // don't calculate, user just wants to change operator
+      contentMainDisplay.pop();
     } else {
-      contentMainDisplay.push(operatorName);
-    }
-    
-  } else {
-    calculate(currentOperator);
-    currentOperator = operator;
-
-    if (operatorName === 'x2') {
-      contentMainDisplay.push('²');
-    } else {
-      contentMainDisplay.push(operatorName);
+      calculate(currentOperator); // calculate intermediate step, before accepting new operator
     }
   }
+
+  currentOperator = operator;
+
+  // handling of ² for aesthetics only
+  if (operatorName === 'x2') {
+    contentMainDisplay.push('²');
+  } else {
+    contentMainDisplay.push(operatorName);
+  }
+
+  workingOperand = 2;
 }
 
 
@@ -105,10 +117,13 @@ function funcInput(func) {
 
 
 function handlePlusMinus() {
-  if (!(currentOperator === '')) return;
+  if (!(currentOperator === '')) return; // don't allow changing sign if operator is present
 
+  // toggle '-' sign in current working operand
   switch (workingOperand) {
     case 1:
+      if (currentValue1 === '0') return;
+
       if (currentValue1.includes('-')) {
         currentValue1 = currentValue1.replace('-', '');
       } else {
@@ -117,6 +132,8 @@ function handlePlusMinus() {
       break;
     
     case 2:
+      if (currentValue2 === '0') return;
+
       if (currentValue2.includes('-')) {
         currentValue2 = currentValue2.replace('-', '');
       } else {
@@ -165,7 +182,17 @@ function handleSaveLoad(type) {
     if (savedValue === '') {
       return;
     } else {
-      contentMainDisplay = Array.from(savedValue);
+
+      switch (workingOperand) {
+        case 1:
+            currentValue1 = savedValue;
+            break;
+         
+        case 2:
+          currentValue2 = savedValue;
+      }
+
+      contentMainDisplay.push(savedValue);
       updateDisplay();
     }
   }
@@ -192,10 +219,20 @@ function handleDelete() {
 
 function handleAC() {
   // Clear all variables EXCEPT saved value
+  contentSubDisplay = [];
+  contentMainDisplay = [];
+
+  workingOperand = 1;
+  currentValue1 = '';
+  currentValue2 = '';
+  currentOperator = '';
 }
 
 
 function calculate(operator) {
+  // exception handling
+  if ((currentOperator === '')) return;
+
   let result = '';
 
   switch (operator) {
@@ -212,7 +249,13 @@ function calculate(operator) {
       break;
 
     case 'divide':
-      result = (parseFloat(currentValue1) / parseFloat(currentValue2));
+      // handle divide by 0
+      if (currentValue2 === '0') {
+        result = 'error';
+
+      } else {
+        result = (parseFloat(currentValue1) / parseFloat(currentValue2));
+      }
       break;
 
     case 'squared':
@@ -224,17 +267,40 @@ function calculate(operator) {
       break;
   }
 
-  result = String(Math.round(result * 10) / 10);
-
+  if (typeof(result) === 'number') {
+    result = String(Math.round(result * 100) / 100);
+  }
+  
   currentValue1 = result;
   currentValue2 = '';
   currentOperator = '';
   workingOperand = 1;
 
+  // handle numbers too long to display
+  if (result.length > maxDisplayLength) {
+    result = convertScientificNotation(result);
+  }
+
   contentSubDisplay = [...contentMainDisplay];
   contentSubDisplay.push('=');
   contentMainDisplay = Array.from(result);
 
+}
+
+
+function convertScientificNotation(number) {
+  // display is rounded, actual variable to calculate with stays correct
+  // round to 5 decimal places
+  let converted = String(Math.round(number));
+  let length = converted.length;
+  
+  converted = converted.slice(0, 1) + '.' + converted.slice(1);
+  converted = parseFloat(converted);
+  converted = converted.toFixed(5);
+
+  converted = `${converted}e${length - 1}`;
+  
+  return converted;
 }
 
 
